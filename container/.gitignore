@@ -1,0 +1,4 @@
+build/
+!**/src/main/**
+!**/src/test/**
+out/
