@@ -10,6 +10,9 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven {
+            url = uri("https://storage.googleapis.com/r8-releases/raw")
+        }
     }
 }
 

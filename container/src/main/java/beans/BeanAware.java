@@ -1,14 +1,11 @@
-package core;
+package beans;
 
 import stereotype.Component;
 import util.BeanAnnotationUtils;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class BeanAware {
 
@@ -68,5 +65,9 @@ public class BeanAware {
             }
         }
         return classes;
+    }
+
+    public Map<String, BeanMetadata> getBeanMetadatas() {
+        return Collections.unmodifiableMap(this.cacheBeanMetadata);
     }
 }

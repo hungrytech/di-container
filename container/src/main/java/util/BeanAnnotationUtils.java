@@ -3,7 +3,8 @@ package util;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BeanAnnotationUtils {
 

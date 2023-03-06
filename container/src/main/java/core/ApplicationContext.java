@@ -1,17 +1,20 @@
 package core;
 
+import beans.BeanRegister;
+
 public class ApplicationContext {
 
-    private final Class<?> startUp;
+    private final BeanRegister beanRegister;
 
-    public ApplicationContext(Class<?> startUp) {
-        this.startUp = startUp;
+    public ApplicationContext() {
+        this.beanRegister = new BeanRegister();
     }
 
-    public void run() {
-        BeanAware beanAware = new BeanAware();
-        beanAware.initialize(startUp);
+    public BeanRegister getBeanFactory() {
+        return this.beanRegister;
+    }
 
-
+    public <T> T getBean(Class<T> clazz) {
+        return this.beanRegister.getBean(clazz);
     }
 }
