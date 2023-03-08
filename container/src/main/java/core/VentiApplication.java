@@ -1,7 +1,6 @@
 package core;
 
-import beans.BeanAware;
-import beans.BeanRegister;
+import beans.*;
 
 public class VentiApplication {
 
@@ -11,19 +10,23 @@ public class VentiApplication {
         this.mainApplicationClass = mainApplicationClass;
     }
 
-    public ApplicationContext run() {
-        ApplicationContext applicationContext = new ApplicationContext();
+    public DefaultApplicationContext run() {
 
-        BeanAware beanAware = new BeanAware();
-        beanAware.initialize(mainApplicationClass);
+        BeanFactoryTargetSource beanFactoryTargetSource = new BeanFactoryTargetSource(mainApplicationClass);
 
-        BeanRegister beanRegister = applicationContext.getBeanFactory();
-        beanRegister.registerBean(beanAware.getBeanMetadatas());
+        DefaultBeanDefinitionReader defaultBeanDefinitionReader = new DefaultBeanDefinitionReader(
+                new BeanRegister(),
+                beanFactoryTargetSource
+        );
 
-        return applicationContext;
+        DefaultApplicationContext defaultApplicationContext = new DefaultApplicationContext(defaultBeanDefinitionReader);
+
+        defaultApplicationContext.prepareContext();
+
+        return defaultApplicationContext;
     }
 
-    public static ApplicationContext run(Class<?> mainApplicationClass) {
+    public static DefaultApplicationContext run(Class<?> mainApplicationClass) {
         return new VentiApplication(mainApplicationClass).run();
     }
 }

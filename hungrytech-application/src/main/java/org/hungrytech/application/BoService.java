@@ -4,15 +4,15 @@ import org.hungrytech.repository.HungryTechRepositoryImpl;
 import stereotype.Service;
 
 @Service
-public class BookingService {
+public class BoService {
 
-    private final HungryTechRepository hungryTechRepository;
+    private final AbstractHungryTechRepository hungryTechRepository;
 
-    public BookingService(HungryTechRepository hungryTechRepository) {
+    public BoService(AbstractHungryTechRepository hungryTechRepository) {
         this.hungryTechRepository = hungryTechRepository;
     }
 
-    public HungryTechRepository getHungryTechRepository() {
+    public AbstractHungryTechRepository getHungryTechRepository() {
         return hungryTechRepository;
     }
 }

@@ -1,6 +1,6 @@
 package org.hungrytech;
 
-import core.ApplicationContext;
+import beans.ApplicationContext;
 import core.VentiApplication;
 
 public class HungryTechApplication {

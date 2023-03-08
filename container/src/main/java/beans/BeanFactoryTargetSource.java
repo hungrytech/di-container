@@ -7,7 +7,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.*;
 
-public class BeanAware {
+public class BeanFactoryTargetSource {
 
     private static final char PKG_SEPARATOR = '.';
 
@@ -15,13 +15,16 @@ public class BeanAware {
 
     private static final String CLASS_FILE_SUFFIX = ".class";
 
+    private final Class<?> startClass;
+
     private final Map<String, BeanMetadata> cacheBeanMetadata = new HashMap<>();
 
-    public BeanAware() {
+    public BeanFactoryTargetSource(Class<?> startClass) {
+        this.startClass = startClass;
     }
 
-    public void initialize(Class<?> startClass) {
-        allPackages(startClass).forEach(it -> cacheBeanMetadata.put(it.getSimpleName(), new BeanMetadata(it)));
+    public void initialize() {
+        allPackages(this.startClass).forEach(it -> cacheBeanMetadata.put(it.getSimpleName(), new BeanMetadata(it)));
     }
 
     private List<Class<?>> allPackages(Class<?> clazz) {

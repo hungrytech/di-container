@@ -1,6 +1,5 @@
 package org.hungrytech.application;
 
-import org.hungrytech.repository.HungryTechRepository;
 import stereotype.Service;
 
 @Service
