@@ -1,12 +1,12 @@
 package beans;
 
-import stereotype.Component;
-import util.BeanAnnotationUtils;
-
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BeanFactoryTargetSource {
 
@@ -48,7 +48,13 @@ public class BeanFactoryTargetSource {
         }
 
         for (File file : files) {
-            classes.addAll(find(file, relationPath));
+            List<Class<?>> findResults = find(file, relationPath);
+
+            if (findResults == null) {
+                continue;
+            }
+
+            classes.addAll(findResults);
         }
 
         classes.forEach(it -> cacheBeanMetadata.put(it.getSimpleName(), new BeanMetadata(it)));
@@ -58,12 +64,20 @@ public class BeanFactoryTargetSource {
         List<Class<?>> classes = new ArrayList<>();
         String resource = scannedPackage + PKG_SEPARATOR + file.getName();
         if (file.isDirectory()) {
-
-            //TODO: 확인사항 필요
             File[] files = file.listFiles();
 
+            if (files == null) {
+                return null;
+            }
+
             for (File child : files) {
-                classes.addAll(find(child, resource));
+                List<Class<?>> findResults = find(child, resource);
+
+                if (findResults == null) {
+                    return null;
+                }
+
+                classes.addAll(findResults);
             }
         } else if (resource.endsWith(CLASS_FILE_SUFFIX)) {
             int endIndex = resource.length() - CLASS_FILE_SUFFIX.length();
