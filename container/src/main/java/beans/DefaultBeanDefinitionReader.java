@@ -13,7 +13,7 @@ public class DefaultBeanDefinitionReader {
 
     public void initializeBean() {
         beanFactoryTargetSource.initialize();
-        beanRegister.registerBean(beanFactoryTargetSource.getBeanMetadatas());
+        beanRegister.registerBean(beanFactoryTargetSource.getBeanCandidatesHolder());
     }
 
     public BeanFactory getBeanFactory() {

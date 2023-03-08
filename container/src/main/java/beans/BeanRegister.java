@@ -1,6 +1,7 @@
 package beans;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,18 +15,45 @@ public class BeanRegister implements BeanFactory {
 
     private final Map<String, BeanMetadata> cacheCandidateBeanMetadataMap = new ConcurrentHashMap<>();
 
+    private final Map<Method, BeanMetadata> cacheCandidateMethodBeanMetadataMap = new ConcurrentHashMap<>();
+
+    private final Map<String, BeanMetadata> reRegisterCandidateBeanMetadataMap = new ConcurrentHashMap<>();
+
     public BeanRegister() {
     }
 
-    public void registerBean(Map<String, BeanMetadata> beanMetadataMap) {
-        this.cacheCandidateBeanMetadataMap.putAll(beanMetadataMap);
+    public void registerBean(BeanCandidatesHolder beanCandidatesHolder) {
+        this.cacheCandidateBeanMetadataMap.putAll(beanCandidatesHolder.getCacheBeanMetadata());
+        this.cacheCandidateMethodBeanMetadataMap.putAll(beanCandidatesHolder.getCacheMethodBeanMetadata());
+
         this.cacheCandidateBeanMetadataMap.forEach(this::register);
+        this.cacheCandidateMethodBeanMetadataMap.forEach(this::registerCandidateMethodBeans);
+        this.reRegisterCandidateBeanMetadataMap.forEach(this::register);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getBean(Class<T> clazz) {
+        return (T) singletonObjects.values()
+                .stream()
+                .filter(it -> it.getClass() == clazz)
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getBean(String beanName, Class<T> type) {
+        return (T) singletonObjects.get(beanName);
     }
 
     private void register(String beanName, BeanMetadata beanMetadata) {
         try {
             Object singletonBean = resolveDependency(beanMetadata.getBeanType());
-            addSingleton(beanName, singletonBean);
+
+            if (singletonBean != null) {
+                addSingleton(beanName, singletonBean);
+            }
         } catch (Exception exception) {
             throw new BeansException(
                     String.format("not created bean exception beans name : %s", beanMetadata.getBeanName()),
@@ -34,15 +62,15 @@ public class BeanRegister implements BeanFactory {
         }
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T getBean(Class<T> clazz) {
-        Object bean = singletonObjects.get(clazz.getSimpleName());
-        return (T) bean;
-    }
-
     @SuppressWarnings("unchecked")
     private <T> T resolveDependency(Class<T> beanType) throws Exception {
+
+        if (isMatchCandidateMethodBean(beanType)) {
+            reRegisterCandidateBeanMetadataMap.put(beanType.getSimpleName(), new BeanMetadata(beanType));
+            return null;
+        }
+
+
         Optional<Object> typeMatchBean = getTypeMatchBean(beanType);
 
         if (typeMatchBean.isPresent()) {
@@ -53,15 +81,63 @@ public class BeanRegister implements BeanFactory {
 
         List<Object> constructorArguments = new ArrayList<>();
 
-        for (Class<?> argumentType : constructor.getParameterTypes()) {
+        Class<?>[] argTypes = constructor.getParameterTypes();
+
+        for (Class<?> argumentType : argTypes) {
+            if (isMatchCandidateMethodBean(argumentType)) {
+                reRegisterCandidateBeanMetadataMap.put(argumentType.getSimpleName(), new BeanMetadata(argumentType));
+                continue;
+            }
+
             Object arg = resolveDependency(argumentType);
             addSingleton(arg.getClass().getSimpleName(), arg);
             constructorArguments.add(arg);
         }
 
+        if (constructorArguments.size() != argTypes.length) {
+            reRegisterCandidateBeanMetadataMap.put(beanType.getSimpleName(), new BeanMetadata(beanType));
+            return null;
+        }
+
         constructor.setAccessible(true);
 
         return (T) constructor.newInstance(constructorArguments.toArray());
+    }
+
+    private void registerCandidateMethodBeans(Method method, BeanMetadata beanMetadata) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+
+        List<Object> parameters = new ArrayList<>();
+        for (Class<?> parameterType : parameterTypes) {
+            Optional<Object> typeMatchBean = getTypeMatchBean(parameterType);
+
+            if (!typeMatchBean.isPresent()) {
+                throw new BeansException(String.format("not found bean type of %s", parameterType.getName()));
+            }
+
+            parameters.add(typeMatchBean.get());
+        }
+
+        Optional<Object> configurationBean = getTypeMatchBean(method.getDeclaringClass());
+        if (!configurationBean.isPresent()) {
+            throw new BeansException(String.format("not found bean type of %s", configurationBean.getClass().getName()));
+        }
+
+        try {
+            method.setAccessible(true);
+            Object singletoneObject = method.invoke(configurationBean.get(), parameters.toArray());
+            addSingleton(method.getName(), singletoneObject);
+
+            cacheCandidateMethodBeanMetadataMap.remove(method);
+        } catch (Exception exception) {
+            throw new MethodBeansException(
+                    String.format(
+                            "bean register operation fail reason : not invoke method : %s%s",
+                            beanMetadata.getBeanType(),
+                            method.getName()),
+                    exception
+            );
+        }
     }
 
     private void addSingleton(String beanName, Object singletonObject) {
@@ -92,23 +168,33 @@ public class BeanRegister implements BeanFactory {
                 Optional.of(singletonObjects.get(candidate.get(0).getSimpleName()));
     }
 
-    private boolean isNotMatchCandidateBeans(Class<?> requestType) {
+    private boolean isNotMatchCandidateBeans(Class<?> requiredType) {
         long matchCount = cacheCandidateBeanMetadataMap.values()
                 .stream()
                 .map(BeanMetadata::getBeanType)
-                .filter(requestType::isAssignableFrom)
+                .filter(requiredType::isAssignableFrom)
                 .count();
 
         return matchCount == 0L;
     }
 
-    private Class<?> getCandidateBeanType(Class<?> requestType) {
+    private boolean isMatchCandidateMethodBean(Class<?> requiredType) {
+        long matchCount = cacheCandidateMethodBeanMetadataMap.values()
+                .stream()
+                .filter(it -> requiredType.isAssignableFrom(it.getBeanType()))
+                .count();
+
+        return matchCount != 0L;
+    }
+
+    private Class<?> getCandidateBeanType(Class<?> requiredType) {
         List<? extends Class<?>> candidate = cacheCandidateBeanMetadataMap.values()
                 .stream()
                 .map(BeanMetadata::getBeanType)
-                .filter(requestType::isAssignableFrom)
+                .filter(requiredType::isAssignableFrom)
                 .collect(Collectors.toList());
 
         return candidate.get(0);
     }
+
 }

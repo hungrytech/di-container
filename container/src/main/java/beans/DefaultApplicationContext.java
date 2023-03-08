@@ -15,8 +15,13 @@ public class DefaultApplicationContext implements ApplicationContext {
     }
 
     @Override
-    public <T> T getBean(Class<T> clazz) {
-        return this.beanFactory.getBean(clazz);
+    public <T> T getBean(Class<T> type) {
+        return this.beanFactory.getBean(type);
+    }
+
+    @Override
+    public <T> T getBean(String beanName, Class<T> type) {
+        return this.beanFactory.getBean(beanName, type);
     }
 
     private void initializeBeans() {
