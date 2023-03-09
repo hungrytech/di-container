@@ -13,7 +13,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "org.hungrytech"
             artifactId = "di-container"
-            version = "0.0.5"
+            version = "0.0.7"
 
             from(components["java"])
         }
