@@ -1,6 +1,10 @@
-package core;
+package org.hungrytech.beans.core;
 
-import beans.*;
+import org.hungrytech.beans.ApplicationContext;
+import org.hungrytech.beans.BeanFactoryTargetSource;
+import org.hungrytech.beans.BeanRegister;
+import org.hungrytech.beans.DefaultApplicationContext;
+import org.hungrytech.beans.DefaultBeanDefinitionReader;
 
 public class VentiApplication {
 
@@ -10,23 +14,24 @@ public class VentiApplication {
         this.mainApplicationClass = mainApplicationClass;
     }
 
-    public DefaultApplicationContext run() {
+    public ApplicationContext run() {
 
         BeanFactoryTargetSource beanFactoryTargetSource = new BeanFactoryTargetSource(mainApplicationClass);
 
         DefaultBeanDefinitionReader defaultBeanDefinitionReader = new DefaultBeanDefinitionReader(
-                new BeanRegister(),
-                beanFactoryTargetSource
+            new BeanRegister(),
+            beanFactoryTargetSource
         );
 
-        DefaultApplicationContext defaultApplicationContext = new DefaultApplicationContext(defaultBeanDefinitionReader);
+        DefaultApplicationContext defaultApplicationContext = new DefaultApplicationContext(
+            defaultBeanDefinitionReader);
 
         defaultApplicationContext.prepareContext();
 
         return defaultApplicationContext;
     }
 
-    public static DefaultApplicationContext run(Class<?> mainApplicationClass) {
+    public static ApplicationContext run(Class<?> mainApplicationClass) {
         return new VentiApplication(mainApplicationClass).run();
     }
 }

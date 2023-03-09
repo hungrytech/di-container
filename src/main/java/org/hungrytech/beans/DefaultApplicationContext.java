@@ -1,4 +1,4 @@
-package beans;
+package org.hungrytech.beans;
 
 public class DefaultApplicationContext implements ApplicationContext {
 

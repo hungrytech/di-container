@@ -1,9 +1,9 @@
-package beans;
+package org.hungrytech.beans;
 
-import stereotype.Bean;
-import stereotype.Component;
-import stereotype.Configuration;
-import util.BeanAnnotationUtils;
+import org.hungrytech.beans.stereotype.Bean;
+import org.hungrytech.beans.stereotype.Component;
+import org.hungrytech.beans.stereotype.Configuration;
+import org.hungrytech.beans.util.BeanAnnotationUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

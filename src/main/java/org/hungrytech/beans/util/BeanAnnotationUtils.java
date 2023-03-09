@@ -1,4 +1,4 @@
-package util;
+package org.hungrytech.beans.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;

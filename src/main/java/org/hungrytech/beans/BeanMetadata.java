@@ -1,4 +1,4 @@
-package beans;
+package org.hungrytech.beans;
 
 import java.lang.reflect.Parameter;
 
