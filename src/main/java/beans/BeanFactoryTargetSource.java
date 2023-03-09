@@ -81,13 +81,15 @@ public class BeanFactoryTargetSource {
             }
         } else if (resource.endsWith(CLASS_FILE_SUFFIX)) {
             int endIndex = resource.length() - CLASS_FILE_SUFFIX.length();
-            String className = resource.substring(0, endIndex);
-            String replace = className.replace("/", ".");
+            String replace = resource.substring(0, endIndex).replace("/", ".");
 
             try {
                 Class<?> target = Class.forName(replace);
 
-                if (BeanAnnotationHelper.hasConfigurationAnnotation(target)) {
+                if (target.isAnnotation()) {
+                    return classes;
+
+                } else if (BeanAnnotationHelper.hasConfigurationAnnotation(target)) {
                     cacheMethodBeanCandidate(target);
                     classes.add(target);
                 } else {
