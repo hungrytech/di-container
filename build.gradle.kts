@@ -4,32 +4,23 @@ plugins {
 }
 
 
-allprojects {
-    group = "org.hungrytech"
-    version = "1.0-SNAPSHOT"
+group = "org.hungrytech"
+version = "0.0.3"
 
-    repositories {
-        mavenCentral()
-        maven {
-            url = uri("https://storage.googleapis.com/r8-releases/raw")
-        }
-    }
+repositories {
+    mavenCentral()
 }
 
-subprojects {
-    apply {
-        plugin("org.jetbrains.kotlin.jvm")
-    }
 
-    dependencies {
-        testImplementation(kotlin("test"))
-    }
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+}
 
-    tasks.test {
-        useJUnitPlatform()
-    }
+tasks.test {
+    useJUnitPlatform()
+}
 
-    kotlin {
-        jvmToolchain(8)
-    }
+kotlin {
+    jvmToolchain(8)
 }
