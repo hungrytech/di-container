@@ -1,14 +1,24 @@
 plugins {
     id("java")
+    `maven-publish`
 }
-
-group = "org.hungrytech"
-version = "0.0.4"
 
 repositories {
     mavenCentral()
 }
 
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "org.hungrytech"
+            artifactId = "di-container"
+            version = "0.0.5"
+
+            from(components["java"])
+        }
+    }
+}
 
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
