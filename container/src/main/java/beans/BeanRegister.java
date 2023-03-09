@@ -36,7 +36,7 @@ public class BeanRegister implements BeanFactory {
     public <T> T getBean(Class<T> clazz) {
         return (T) singletonObjects.values()
                 .stream()
-                .filter(it -> it.getClass() == clazz)
+                .filter(it -> clazz.isAssignableFrom(it.getClass()))
                 .findFirst()
                 .orElse(null);
     }
