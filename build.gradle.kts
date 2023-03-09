@@ -1,8 +1,6 @@
 plugins {
-    java
-    kotlin("jvm") version "1.8.0"
+    id("java")
 }
-
 
 group = "org.hungrytech"
 version = "0.0.3"
@@ -17,10 +15,6 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
-tasks.test {
+tasks.getByName<Test>("test") {
     useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(8)
 }
