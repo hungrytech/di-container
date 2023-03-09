@@ -24,7 +24,8 @@ public class VentiApplication {
         );
 
         DefaultApplicationContext defaultApplicationContext = new DefaultApplicationContext(
-            defaultBeanDefinitionReader);
+                defaultBeanDefinitionReader
+        );
 
         defaultApplicationContext.prepareContext();
 

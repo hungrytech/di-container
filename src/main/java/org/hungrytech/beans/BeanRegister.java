@@ -71,7 +71,7 @@ public class BeanRegister implements BeanFactory {
         }
 
 
-        Optional<Object> typeMatchBean = getTypeMatchBean(beanType);
+        Optional<Object> typeMatchBean = getTypeMatchBeanInSingleToneBeans(beanType);
 
         if (typeMatchBean.isPresent()) {
             return (T) typeMatchBean.get();
@@ -90,8 +90,11 @@ public class BeanRegister implements BeanFactory {
             }
 
             Object arg = resolveDependency(argumentType);
-            addSingleton(arg.getClass().getSimpleName(), arg);
-            constructorArguments.add(arg);
+
+            if (arg != null) {
+                addSingleton(arg.getClass().getSimpleName(), arg);
+                constructorArguments.add(arg);
+            }
         }
 
         if (constructorArguments.size() != argTypes.length) {
@@ -109,7 +112,7 @@ public class BeanRegister implements BeanFactory {
 
         List<Object> parameters = new ArrayList<>();
         for (Class<?> parameterType : parameterTypes) {
-            Optional<Object> typeMatchBean = getTypeMatchBean(parameterType);
+            Optional<Object> typeMatchBean = getTypeMatchBeanInSingleToneBeans(parameterType);
 
             if (!typeMatchBean.isPresent()) {
                 throw new BeansException(String.format("not found bean type of %s", parameterType.getName()));
@@ -118,7 +121,7 @@ public class BeanRegister implements BeanFactory {
             parameters.add(typeMatchBean.get());
         }
 
-        Optional<Object> configurationBean = getTypeMatchBean(method.getDeclaringClass());
+        Optional<Object> configurationBean = getTypeMatchBeanInSingleToneBeans(method.getDeclaringClass());
         if (!configurationBean.isPresent()) {
             throw new BeansException(String.format("not found bean type of %s", configurationBean.getClass().getName()));
         }
@@ -148,24 +151,27 @@ public class BeanRegister implements BeanFactory {
         Constructor<?>[] candidates = clazz.getDeclaredConstructors();
 
         if (candidates.length == 0) {
-            throw new IllegalStateException(String.format("No constructor has been found for class %s", clazz.getName()));
+            throw new IllegalStateException(
+                    String.format("No constructor has been found for class %s", clazz.getName())
+            );
         }
 
         return candidates[0];
     }
 
-    private Optional<Object> getTypeMatchBean(Class<?> requestType) {
+    private Optional<Object> getTypeMatchBeanInSingleToneBeans(Class<?> requestType) {
         if (isNotMatchCandidateBeans(requestType)) {
             throw new BeansException(String.format("not find bean candidate type of %s", requestType.getName()));
         }
 
-        List<? extends Class<?>> candidate = this.singletonObjects.values().stream()
+        List<? extends Class<?>> candidates = this.singletonObjects.values()
+                .stream()
                 .map(Object::getClass)
                 .filter(requestType::isAssignableFrom)
                 .collect(Collectors.toList());
 
-        return candidate.isEmpty() ? Optional.empty() :
-                Optional.of(singletonObjects.get(candidate.get(0).getSimpleName()));
+        return candidates.isEmpty() ? Optional.empty() :
+                Optional.of(singletonObjects.get(candidates.get(0).getSimpleName()));
     }
 
     private boolean isNotMatchCandidateBeans(Class<?> requiredType) {
@@ -188,7 +194,7 @@ public class BeanRegister implements BeanFactory {
     }
 
     private Class<?> getCandidateBeanType(Class<?> requiredType) {
-        List<? extends Class<?>> candidate = cacheCandidateBeanMetadataMap.values()
+        List<? extends Class<?>> candidate = this.cacheCandidateBeanMetadataMap.values()
                 .stream()
                 .map(BeanMetadata::getBeanType)
                 .filter(requiredType::isAssignableFrom)
